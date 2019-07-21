@@ -7,22 +7,27 @@ type field struct {
 	Name        string
 	Type        string
 	Placeholder string
+	Value       interface{}
 }
 
 func fields(strct interface{}) []field {
 	var formFields []field
 
-	rv := reflect.ValueOf(strct)
-	t := rv.Type()
+	refVal := reflect.ValueOf(strct)
+	typ := refVal.Type()
 
-	for i := 0; i < t.NumField(); i++ {
-		tf := t.Field(i)
+	for i := 0; i < typ.NumField(); i++ {
+		typeForm := typ.Field(i)
+		refValForm := refVal.Field(i)
+
 		f := field{
-			Label:       tf.Name,
+			Label:       typeForm.Name,
 			Name:        "Name",
 			Type:        "Type",
 			Placeholder: "Placeholder",
+			Value:       refValForm.Interface(),
 		}
+
 		formFields = append(formFields, f)
 	}
 
