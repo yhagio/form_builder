@@ -3,6 +3,9 @@ language: go
 go:
 - 1.11.5
 
+# install:
+# - go get .
+
 script:
 # - go test -v ./...
 - go test -v -coverprofile=coverage.txt -covermode=atomic

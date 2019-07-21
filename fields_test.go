@@ -19,7 +19,18 @@ func TestFields(t *testing.T) {
 				Name string
 			}{},
 			want: field{
-				Label:       "Label",
+				Label:       "Name",
+				Name:        "Name",
+				Type:        "Type",
+				Placeholder: "Placeholder",
+			},
+		},
+		{
+			strct: struct {
+				FullName string
+			}{},
+			want: field{
+				Label:       "FullName",
 				Name:        "Name",
 				Type:        "Type",
 				Placeholder: "Placeholder",
