@@ -1,4 +1,4 @@
-package form
+package form_builder
 
 type field struct {
 	Label       string
