@@ -106,6 +106,33 @@ func TestFields(t *testing.T) {
 				},
 			},
 		},
+		"Unexported fields should be skipped": {
+			strct: struct {
+				Name  string
+				email string
+				Age   int
+			}{
+				Name:  "Alice Smith",
+				email: "alice@cc.cc",
+				Age:   25,
+			},
+			want: []field{
+				{
+					Label:       "Name",
+					Name:        "Name",
+					Type:        "Type",
+					Placeholder: "Placeholder",
+					Value:       "Alice Smith",
+				},
+				{
+					Label:       "Age",
+					Name:        "Name",
+					Type:        "Type",
+					Placeholder: "Placeholder",
+					Value:       25,
+				},
+			},
+		},
 	}
 
 	for key, tc := range tests {

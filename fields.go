@@ -20,6 +20,10 @@ func fields(strct interface{}) []field {
 		typeForm := typ.Field(i)
 		refValForm := refVal.Field(i)
 
+		if !refValForm.CanInterface() {
+			continue
+		}
+
 		f := field{
 			Label:       typeForm.Name,
 			Name:        "Name",
