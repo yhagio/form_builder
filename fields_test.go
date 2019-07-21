@@ -13,8 +13,8 @@ func TestFields(t *testing.T) {
 		want  []field
 	}
 
-	tests := []testStructs{
-		{
+	tests := map[string]testStructs{
+		"Field name is determined from provided struct 1": {
 			strct: struct {
 				Name string
 			}{},
@@ -28,7 +28,7 @@ func TestFields(t *testing.T) {
 				},
 			},
 		},
-		{
+		"Field name is determined from provided struct 2": {
 			strct: struct {
 				FullName string
 			}{},
@@ -42,7 +42,7 @@ func TestFields(t *testing.T) {
 				},
 			},
 		},
-		{
+		"Multiple field names are determined from struct": {
 			strct: struct {
 				Name  string
 				Email string
@@ -72,10 +72,44 @@ func TestFields(t *testing.T) {
 				},
 			},
 		},
+		"Values should be parsed as well as field names": {
+			strct: struct {
+				Name  string
+				Email string
+				Age   int
+			}{
+				Name:  "Alice Smith",
+				Email: "alice@cc.cc",
+				Age:   25,
+			},
+			want: []field{
+				{
+					Label:       "Name",
+					Name:        "Name",
+					Type:        "Type",
+					Placeholder: "Placeholder",
+					Value:       "Alice Smith",
+				},
+				{
+					Label:       "Email",
+					Name:        "Name",
+					Type:        "Type",
+					Placeholder: "Placeholder",
+					Value:       "alice@cc.cc",
+				},
+				{
+					Label:       "Age",
+					Name:        "Name",
+					Type:        "Type",
+					Placeholder: "Placeholder",
+					Value:       25,
+				},
+			},
+		},
 	}
 
-	for _, tc := range tests {
-		t.Run(fmt.Sprintf("%v", tc.strct), func(t *testing.T) {
+	for key, tc := range tests {
+		t.Run(fmt.Sprintf("%v", key), func(t *testing.T) {
 			got := fields(tc.strct)
 			if !reflect.DeepEqual(got, tc.want) {
 				t.Errorf("fields(): got %v; want %v", got, tc.want)
