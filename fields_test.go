@@ -218,3 +218,26 @@ func TestFields_labels(t *testing.T) {
 		})
 	}
 }
+
+func TestFields_invalidTypes(t *testing.T) {
+	tests := []struct {
+		notAStruct interface{}
+	}{
+		{"string"},
+		{12345},
+		{nil},
+	}
+
+	for _, tc := range tests {
+		t.Run(fmt.Sprintf("%T", tc.notAStruct), func(t *testing.T) {
+
+			defer func() {
+				if err := recover(); err == nil {
+					t.Errorf("fields(%v) did not panic", tc.notAStruct)
+				}
+			}()
+
+			fields(tc.notAStruct)
+		})
+	}
+}

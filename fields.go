@@ -11,11 +11,14 @@ type field struct {
 }
 
 func fields(strct interface{}) []field {
-	var formFields []field
-
 	refVal := reflect.ValueOf(strct)
+	if refVal.Kind() != reflect.Struct {
+		panic("Only Struct is supported!")
+	}
+
 	typ := refVal.Type()
 
+	var formFields []field
 	for i := 0; i < typ.NumField(); i++ {
 		typeForm := typ.Field(i)
 		refValForm := refVal.Field(i)
