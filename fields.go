@@ -12,8 +12,13 @@ type field struct {
 
 func fields(strct interface{}) []field {
 	refVal := reflect.ValueOf(strct)
+	// If the value is pointer, set the value of whatever the value points to
+	if refVal.Kind() == reflect.Ptr {
+		refVal = refVal.Elem()
+	}
+	// Make sure the value is struct
 	if refVal.Kind() != reflect.Struct {
-		panic("Only Struct is supported!")
+		panic("Oh oh. Only Struct is supported!")
 	}
 
 	typ := refVal.Type()
