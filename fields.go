@@ -9,16 +9,22 @@ type field struct {
 	Placeholder string
 }
 
-func fields(strct interface{}) field {
+func fields(strct interface{}) []field {
+	var formFields []field
+
 	rv := reflect.ValueOf(strct)
 	t := rv.Type()
 
-	tf := t.Field(0)
-
-	return field{
-		Label:       tf.Name,
-		Name:        "Name",
-		Type:        "Type",
-		Placeholder: "Placeholder",
+	for i := 0; i < t.NumField(); i++ {
+		tf := t.Field(i)
+		f := field{
+			Label:       tf.Name,
+			Name:        "Name",
+			Type:        "Type",
+			Placeholder: "Placeholder",
+		}
+		formFields = append(formFields, f)
 	}
+
+	return formFields
 }
