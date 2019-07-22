@@ -4,7 +4,7 @@ go:
 - 1.11.5
 
 # install:
-# - go get .
+# - go get golang.org/x/tools/gopls@latest
 
 script:
 # - go test -v ./...

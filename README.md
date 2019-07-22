@@ -11,8 +11,6 @@ Build HTML form from Go struct
 ---
 
 ```sh
-go test
-go test -cover
-go test -coverprofile=cover.txt
+go test -v -coverprofile=cover.txt
 go tool cover -func=cover.txt
 ```
