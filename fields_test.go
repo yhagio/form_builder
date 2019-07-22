@@ -7,6 +7,10 @@ import (
 )
 
 func TestFields(t *testing.T) {
+	var nilStructPointer *struct {
+		Name string
+		Age  int
+	}
 
 	type testStructs struct {
 		strct interface{}
@@ -155,6 +159,180 @@ func TestFields(t *testing.T) {
 					Type:        "Type",
 					Placeholder: "Placeholder",
 					Value:       25,
+				},
+			},
+		},
+		"Nil pointers with a struct type should be supported": {
+			strct: nilStructPointer,
+			want: []field{
+				{
+					Label:       "Name",
+					Name:        "Name",
+					Type:        "Type",
+					Placeholder: "Placeholder",
+					Value:       "",
+				},
+				{
+					Label:       "Age",
+					Name:        "Name",
+					Type:        "Type",
+					Placeholder: "Placeholder",
+					Value:       0,
+				},
+			},
+		},
+		"Pointer fields should be supported": {
+			strct: struct {
+				Name *string
+				Age  *int
+			}{},
+			want: []field{
+				{
+					Label:       "Name",
+					Name:        "Name",
+					Type:        "Type",
+					Placeholder: "Placeholder",
+					Value:       "",
+				},
+				{
+					Label:       "Age",
+					Name:        "Name",
+					Type:        "Type",
+					Placeholder: "Placeholder",
+					Value:       0,
+				},
+			},
+		},
+		"Nested structs should be supported": {
+			strct: struct {
+				Name    string
+				Address struct {
+					Street string
+					Zip    int
+				}
+			}{
+				Name: "Alice Smith",
+				Address: struct {
+					Street string
+					Zip    int
+				}{
+					Street: "123 ABC St",
+					Zip:    12345,
+				},
+			},
+			want: []field{
+				{
+					Label:       "Name",
+					Name:        "Name",
+					Type:        "Type",
+					Placeholder: "Placeholder",
+					Value:       "Alice Smith",
+				},
+				{
+					Label:       "Street",
+					Name:        "Address.Name",
+					Type:        "Type",
+					Placeholder: "Placeholder",
+					Value:       "123 ABC St",
+				},
+				{
+					Label:       "Zip",
+					Name:        "Address.Name",
+					Type:        "Type",
+					Placeholder: "Placeholder",
+					Value:       12345,
+				},
+			},
+		},
+		"Doubly nested structs should be supported": {
+			strct: struct {
+				A struct {
+					B struct {
+						C1 string
+						C2 int
+					}
+				}
+			}{
+				A: struct {
+					B struct {
+						C1 string
+						C2 int
+					}
+				}{
+					B: struct {
+						C1 string
+						C2 int
+					}{
+						C1: "C1-value",
+						C2: 123,
+					},
+				},
+			},
+			want: []field{
+				{
+					Label:       "C1",
+					Name:        "A.B.Name",
+					Type:        "Type",
+					Placeholder: "Placeholder",
+					Value:       "C1-value",
+				},
+				{
+					Label:       "C2",
+					Name:        "A.B.Name",
+					Type:        "Type",
+					Placeholder: "Placeholder",
+					Value:       123,
+				},
+			},
+		},
+		"Nested pointer structs should be supported": {
+			strct: struct {
+				Name    string
+				Address *struct {
+					Street string
+					Zip    int
+				}
+				ContactCard *struct {
+					Phone string
+				}
+			}{
+				Name: "Alice Smith",
+				Address: &struct {
+					Street string
+					Zip    int
+				}{
+					Street: "123 ABC St",
+					Zip:    12345,
+				},
+			},
+			want: []field{
+				{
+					Label:       "Name",
+					Name:        "Name",
+					Type:        "Type",
+					Placeholder: "Placeholder",
+					Value:       "Alice Smith",
+				},
+				{
+					Label:       "Street",
+					Name:        "Address.Name",
+					Type:        "Type",
+					Placeholder: "Placeholder",
+					Value:       "123 ABC St",
+				},
+				{
+					Label:       "Zip",
+					Name:        "Address.Name",
+					Type:        "Type",
+					Placeholder: "Placeholder",
+					Value:       12345,
+				},
+				{
+					Label:       "Phone",
+					Name:        "ContactCard.Name",
+					Type:        "Type",
+					Placeholder: "Placeholder",
+					Value:       "",
 				},
 			},
 		},
