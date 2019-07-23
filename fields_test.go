@@ -3,8 +3,63 @@ package form_builder
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 )
+
+func TestParseTags(t *testing.T) {
+	tests := map[string]struct {
+		arg  reflect.StructField
+		want map[string]string
+	}{
+		"empty tag": {
+			arg:  reflect.StructField{},
+			want: nil,
+		},
+		"label tag": {
+			arg: reflect.StructField{
+				Tag: `form:"label=Full Name"`,
+			},
+			want: map[string]string{
+				"label": "Full Name",
+			},
+		},
+		"multiple tags": {
+			arg: reflect.StructField{
+				Tag: `form:"label=Full Name;email=Email"`,
+			},
+			want: map[string]string{
+				"label": "Full Name",
+				"email": "Email",
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := parseTags(tc.arg)
+			if len(got) != len(tc.want) {
+				t.Errorf("parseTags() len = %d, want %d", len(got), len(tc.want))
+			}
+
+			for k, v := range tc.want {
+				gotVal, ok := got[k]
+				if !ok {
+					t.Errorf("parseTags() missing key %q", k)
+					continue
+				}
+				if gotVal != v {
+					t.Errorf("parseTags()[%q] = %q; want %q", k, gotVal, v)
+				}
+				delete(got, k)
+			}
+
+			for gotKey, gotVal := range got {
+				t.Errorf("parseTags() extra key %q, value = %q", gotKey, gotVal)
+			}
+		})
+	}
+}
 
 func TestFields(t *testing.T) {
 	var nilStructPointer *struct {
@@ -443,4 +498,47 @@ func TestFields_invalidTypes(t *testing.T) {
 			fields(tc.notAStruct)
 		})
 	}
+}
+
+func TestParseTags_invalidStructTypes(t *testing.T) {
+	tests := []struct {
+		arg reflect.StructField
+	}{
+		{reflect.StructField{Tag: `form:"invalid"`}},
+	}
+
+	for _, tc := range tests {
+		t.Run(string(tc.arg.Tag), func(t *testing.T) {
+
+			defer func() {
+				if err := recover(); err == nil {
+					t.Errorf("parseTags() did not panic")
+				}
+			}()
+
+			parseTags(tc.arg)
+		})
+	}
+}
+
+func parseTags(rsf reflect.StructField) map[string]string {
+	rawTag := rsf.Tag.Get("form")
+	if len(rawTag) == 0 {
+		return nil
+	}
+
+	result := make(map[string]string)
+
+	tags := strings.Split(rawTag, ";")
+	for _, tag := range tags {
+		kv := strings.Split(tag, "=")
+		if len(kv) != 2 {
+			panic("form: invalid struct tag")
+		}
+
+		k, v := kv[0], kv[1]
+		result[k] = v
+	}
+
+	return result
 }
