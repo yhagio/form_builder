@@ -69,7 +69,7 @@ func fields(strct interface{}) []field {
 			Label:       typeForm.Name,
 			Name:        typeForm.Name,
 			Type:        "text",
-			Placeholder: "Placeholder",
+			Placeholder: typeForm.Name,
 			Value:       refValForm.Interface(),
 		}
 
