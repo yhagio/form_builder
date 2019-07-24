@@ -3,7 +3,6 @@ package form_builder
 import (
 	"fmt"
 	"reflect"
-	"strings"
 	"testing"
 )
 
@@ -391,13 +390,97 @@ func TestFields(t *testing.T) {
 				},
 			},
 		},
+		"Struct tags": {
+			strct: struct {
+				LabelTest       string `form:"label=This is custom"`
+				NameTest        string `form:"name=full_name"`
+				TypeTest        int    `form:"type=number"`
+				PlaceholderTest string `form:"placeholder=your value goes here..."`
+				Nested          struct {
+					MultiTest string `form:"name=NestedMulti;label=This is nested;type=email;placeholder=user@example.com"`
+				}
+			}{
+				PlaceholderTest: "value and placeholder",
+			},
+			want: []field{
+				{
+					Label:       "This is custom",
+					Name:        "LabelTest",
+					Type:        "text",
+					Placeholder: "LabelTest",
+					Value:       "",
+				},
+				{
+					Label:       "NameTest",
+					Name:        "full_name",
+					Type:        "text",
+					Placeholder: "NameTest",
+					Value:       "",
+				},
+				{
+					Label:       "TypeTest",
+					Name:        "TypeTest",
+					Type:        "number",
+					Placeholder: "TypeTest",
+					Value:       0,
+				},
+				{
+					Label:       "PlaceholderTest",
+					Name:        "PlaceholderTest",
+					Type:        "text",
+					Placeholder: "your value goes here...",
+					Value:       "value and placeholder",
+				},
+				{
+					Label:       "This is nested",
+					Name:        "NestedMulti",
+					Type:        "email",
+					Placeholder: "user@example.com",
+					Value:       "",
+				},
+			},
+		},
 	}
 
 	for key, tc := range tests {
 		t.Run(fmt.Sprintf("%v", key), func(t *testing.T) {
 			got := fields(tc.strct)
 			if !reflect.DeepEqual(got, tc.want) {
-				t.Errorf("fields(): got %v; want %v", got, tc.want)
+				t.Errorf("fields():\n  got %v;\n want %v", got, tc.want)
+			}
+
+			if len(got) != len(tc.want) {
+				t.Errorf("fields(): got %d; want %d", len(got), len(tc.want))
+			}
+
+			for i, gotField := range got {
+				if i >= len(tc.want) {
+					break
+				}
+				wantField := tc.want[i]
+				if reflect.DeepEqual(gotField, wantField) {
+					continue
+				}
+
+				if gotField.Label != wantField.Label {
+					t.Errorf(" .Label = %v; want %v", gotField.Label, wantField.Label)
+				}
+
+				if gotField.Name != wantField.Name {
+					t.Errorf(" .Name = %v; want %v", gotField.Name, wantField.Name)
+				}
+
+				if gotField.Type != wantField.Type {
+					t.Errorf(" .Type = %v; want %v", gotField.Type, wantField.Type)
+				}
+
+				if gotField.Placeholder != wantField.Placeholder {
+					t.Errorf(" .Placeholder = %v; want %v", gotField.Placeholder, wantField.Placeholder)
+				}
+
+				if gotField.Value != wantField.Value {
+					t.Errorf(" .Value = %v; want %v", gotField.Value, wantField.Value)
+				}
 			}
 		})
 	}
@@ -519,26 +602,4 @@ func TestParseTags_invalidStructTypes(t *testing.T) {
 			parseTags(tc.arg)
 		})
 	}
-}
-
-func parseTags(rsf reflect.StructField) map[string]string {
-	rawTag := rsf.Tag.Get("form")
-	if len(rawTag) == 0 {
-		return nil
-	}
-
-	result := make(map[string]string)
-
-	tags := strings.Split(rawTag, ";")
-	for _, tag := range tags {
-		kv := strings.Split(tag, "=")
-		if len(kv) != 2 {
-			panic("form: invalid struct tag")
-		}
-
-		k, v := kv[0], kv[1]
-		result[k] = v
-	}
-
-	return result
 }

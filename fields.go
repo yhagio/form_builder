@@ -1,6 +1,9 @@
 package form_builder
 
-import "reflect"
+import (
+	"reflect"
+	"strings"
+)
 
 type field struct {
 	Label       string
@@ -8,6 +11,21 @@ type field struct {
 	Type        string
 	Placeholder string
 	Value       interface{}
+}
+
+func (f *field) apply(tags map[string]string) {
+	if v, ok := tags["label"]; ok {
+		f.Label = v
+	}
+	if v, ok := tags["name"]; ok {
+		f.Name = v
+	}
+	if v, ok := tags["placeholder"]; ok {
+		f.Placeholder = v
+	}
+	if v, ok := tags["type"]; ok {
+		f.Type = v
+	}
 }
 
 func valueOf(val interface{}) reflect.Value {
@@ -32,12 +50,9 @@ func valueOf(val interface{}) reflect.Value {
 	return refVal
 }
 
-func fields(strct interface{}) []field {
+func fields(strct interface{}, parentNames ...string) []field {
 	refVal := valueOf(strct)
-	// If the value is pointer, set the value of whatever the value points to
-	if refVal.Kind() == reflect.Ptr {
-		refVal = refVal.Elem()
-	}
+
 	// Make sure the value is struct
 	if refVal.Kind() != reflect.Struct {
 		panic("Oh oh. Only Struct is supported!")
@@ -57,24 +72,49 @@ func fields(strct interface{}) []field {
 
 		// Supports nested fields
 		if refValForm.Kind() == reflect.Struct {
-			nestedFields := fields(refValForm.Interface())
-			for i, nestedField := range nestedFields {
-				nestedFields[i].Name = typeForm.Name + "." + nestedField.Name
-			}
+			nestedParentNames := append(parentNames, typeForm.Name)
+			nestedFields := fields(refValForm.Interface(), nestedParentNames...)
 			formFields = append(formFields, nestedFields...)
 			continue
 		}
 
+		names := append(parentNames, typeForm.Name)
+		name := strings.Join(names, ".")
+
 		f := field{
 			Label:       typeForm.Name,
-			Name:        typeForm.Name,
+			Name:        name,
 			Type:        "text",
 			Placeholder: typeForm.Name,
 			Value:       refValForm.Interface(),
 		}
 
+		f.apply(parseTags(typeForm))
+
 		formFields = append(formFields, f)
 	}
 
 	return formFields
+}
+
+func parseTags(rsf reflect.StructField) map[string]string {
+	rawTag := rsf.Tag.Get("form")
+	if len(rawTag) == 0 {
+		return nil
+	}
+
+	result := make(map[string]string)
+
+	tags := strings.Split(rawTag, ";")
+	for _, tag := range tags {
+		kv := strings.Split(tag, "=")
+		if len(kv) != 2 {
+			panic("form: invalid struct tag")
+		}
+
+		k, v := kv[0], kv[1]
+		result[k] = v
+	}
+
+	return result
 }
