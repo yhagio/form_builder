@@ -11,19 +11,22 @@ import (
 	"testing"
 )
 
-var (
-	tplTypeNameValue = template.Must(
-		template.
-			New("").
-			Parse(`<input type="{{.Type}}" name="{{.Name}}" {{with .Value}}value="{{.}}"{{end}}>`),
-	)
-)
-
 var updateFlag bool
 
 func init() {
 	flag.BoolVar(&updateFlag, "update", false, "set the update flag to update the expected output of all golden file")
 }
+
+var (
+	tplTypeNameValue = template.Must(template.New("").Parse(`<input type="{{.Type}}" name="{{.Name}}"{{with .Value}} value="{{.}}"{{end}}>`))
+	tplAll           = template.Must(template.New("").Parse(`
+	<label>{{.Label}}</label>
+	<input
+		type="{{.Type}}"
+		name="{{.Name}}"
+		placeholder="{{.Placeholder}}"
+		{{with .Value}}value="{{.}}"{{end}}>`))
+)
 
 func TestHTML(t *testing.T) {
 	tests := map[string]struct {
@@ -42,6 +45,21 @@ func TestHTML(t *testing.T) {
 				Email: "alice@cc.cc",
 			},
 			want: "TestHTML_basic.golden",
+		},
+		"A form with custom struct tags": {
+			tpl: tplAll,
+			strct: struct {
+				LabelTest       string `form:"label=This is custom"`
+				NameTest        string `form:"name=full_name"`
+				TypeTest        int    `form:"type=number"`
+				PlaceholderTest string `form:"placeholder=your value goes here..."`
+				Nested          struct {
+					MultiTest string `form:"name=NestedMulti;label=This is nested;type=email;placeholder=user@example.com"`
+				}
+			}{
+				PlaceholderTest: "value and placeholder",
+			},
+			want: "TestHTML_structTags.golden",
 		},
 	}
 
