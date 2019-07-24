@@ -26,12 +26,24 @@ var (
 		name="{{.Name}}"
 		placeholder="{{.Placeholder}}"
 		{{with .Value}}value="{{.}}"{{end}}>`))
+	tplErrors = template.Must(template.New("").Parse(`
+		<label>{{.Label}}</label>
+		<input
+			class="{{with .Errors}}border-red{{end}}"
+			type="{{.Type}}"
+			name="{{.Name}}"
+			placeholder="{{.Placeholder}}"
+			{{with .Value}}value="{{.}}"{{end}}>
+		{{range .Errors}}
+			<p class="text-red text-xs italic">{{.}}</p>
+		{{end}}`))
 )
 
 func TestHTML(t *testing.T) {
 	tests := map[string]struct {
 		tpl     *template.Template
 		strct   interface{}
+		errors  []form_builder.FieldError
 		want    string
 		wantErr error
 	}{
