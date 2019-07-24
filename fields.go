@@ -29,6 +29,14 @@ func (f *field) apply(tags map[string]string) {
 	}
 }
 
+func (f *field) setErrors(errors []FieldError) {
+	for _, ferr := range errors {
+		if ferr.Field == f.Name {
+			f.Errors = append(f.Errors, ferr.Error)
+		}
+	}
+}
+
 func valueOf(val interface{}) reflect.Value {
 	var refVal reflect.Value
 	switch value := val.(type) {
